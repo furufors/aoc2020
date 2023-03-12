@@ -2,44 +2,37 @@
 -- stack --resolver lts-18.18 script
 import Text.Parsec
 import Data.List
-data Facing = FN | FE | FS | FW deriving (Eq, Show)
 data Action = N | E | S | W | L | R | F deriving (Eq, Show)
 type Instruction = (Action, Int)
-type Position = (Facing, (Int, Int), WayPoint)
+type Position = ((Int, Int), WayPoint)
 type WayPoint = (Int, Int)
 
 main :: IO ()
 main = interact $ show . manhattan . foldl followInstruction startPos . map parsein . lines
     where
-        startPos = (FE, (0, 0), (10,1))
+        startPos = ((0, 0), (10,1))
 
 manhattan :: Position -> Int
-manhattan (_,(x,y),_) = abs x + abs y
+manhattan ((x,y),_) = abs x + abs y
 
 followInstruction :: Position -> Instruction -> Position
 followInstruction pos (N,i) = moveWp ( 0,  i) pos
 followInstruction pos (E,i) = moveWp ( i,  0) pos
 followInstruction pos (S,i) = moveWp ( 0, -i) pos
 followInstruction pos (W,i) = moveWp (-i,  0) pos
-followInstruction pos@(f,(x,y),(wx,wy)) (L,  90) = (f,(x,y),(-wy, wx))
-followInstruction pos@(f,(x,y),(wx,wy)) (L, 180) = (f,(x,y),(-wx,-wy))
-followInstruction pos@(f,(x,y),(wx,wy)) (L, 270) = (f,(x,y),( wy,-wx))
-followInstruction pos@(f,(x,y),(wx,wy)) (R,  90) = (f,(x,y),( wy,-wx))
-followInstruction pos@(f,(x,y),(wx,wy)) (R, 180) = (f,(x,y),(-wx,-wy))
-followInstruction pos@(f,(x,y),(wx,wy)) (R, 270) = (f,(x,y),(-wy, wx))
-followInstruction pos@(f,(x,y),(wx,wy)) (F, i) = move (i*wx,i*wy) pos
+followInstruction pos@((x,y),(wx,wy)) (L,  90) = ((x,y),(-wy, wx))
+followInstruction pos@((x,y),(wx,wy)) (L, 180) = ((x,y),(-wx,-wy))
+followInstruction pos@((x,y),(wx,wy)) (L, 270) = ((x,y),( wy,-wx))
+followInstruction pos@((x,y),(wx,wy)) (R,  90) = ((x,y),( wy,-wx))
+followInstruction pos@((x,y),(wx,wy)) (R, 180) = ((x,y),(-wx,-wy))
+followInstruction pos@((x,y),(wx,wy)) (R, 270) = ((x,y),(-wy, wx))
+followInstruction pos@((x,y),(wx,wy)) (F, i) = move (i*wx,i*wy) pos
 
 move :: (Int, Int) -> Position -> Position
-move (a, b) (f, (x, y), (wx,wy)) = (f, (x+a, y+b), (wx, wy))
+move (a, b) ((x, y), (wx,wy)) = ((x+a, y+b), (wx, wy))
 
 moveWp :: (Int, Int) -> Position -> Position
-moveWp (a, b) (f, (x, y), (wx,wy)) = (f, (x, y), (wx+a, wy+b))
-
-toAction :: Facing -> Action
-toAction FN = N
-toAction FE = E
-toAction FS = S
-toAction FW = W
+moveWp (a, b) ((x, y), (wx,wy)) = ((x, y), (wx+a, wy+b))
 
 parsein :: String -> Instruction
 parsein input = case parse parseInstruction "parsein" input of
